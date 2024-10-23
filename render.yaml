@@ -1,0 +1,15 @@
+version: 1
+services:
+  - type: web
+    name: Recordify
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    autoDeploy: true
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 5000
+      - key: SECRET_KEY
+        value: your-random-secret-key
