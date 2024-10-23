@@ -3,114 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Recorder</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        body {
-            background-color: #e9ecef;
-            color: #343a40;
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #007bff;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        video {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            width: 100%;
-            border-radius: 5px;
-        }
-        button {
-            margin: 5px 0;
-        }
-        footer {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .terms-link {
-            margin-top: 10px;
-            display: inline-block;
-        }
-    </style>
+    <title>EchoVault - Screen Recording App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Professional Screen Recorder</h1>
-        <p>Record your screen with audio and easily download your recordings.</p>
-        <button id="startBtn" class="btn btn-primary btn-lg">Start Recording</button>
-        <button id="stopBtn" class="btn btn-danger btn-lg" disabled>Stop Recording</button>
+    <header>
+        <h1>Welcome to EchoVault</h1>
+    </header>
+    <main>
+        <h2>Screen Recorder</h2>
+        <button id="start">Start Recording</button>
+        <button id="stop">Stop Recording</button>
+        <button id="download">Download Video</button>
+        <button id="testMic">Test Microphone</button>
+        <audio id="audioPlayback" controls></audio>
         <video id="recordedVideo" controls></video>
-        <a id="downloadBtn" class="btn btn-success btn-lg" download style="display:none;">Download Recording</a>
-
-        <h2 class="mt-5">FAQ</h2>
-        <div>
-            <strong>1. How do I record my screen?</strong>
-            <p>Click the "Start Recording" button, select the screen or window you want to share, and click "Share."</p>
+        <div id="micTestArea" style="display:none;">
+            <h3>Microphone Test</h3>
+            <audio id="micPlayback" controls></audio>
         </div>
-        <div>
-            <strong>2. Why can I only hear my computer audio?</strong>
-            <p>Ensure you select the option to include your microphone when prompted.</p>
+        <div id="faq">
+            <h2>FAQ</h2>
+            <p>Q: Will my videos be stored on the server?</p>
+            <p>A: No, videos will only be stored locally in your browser.</p>
         </div>
-        <div>
-            <strong>3. How do I download the recording?</strong>
-            <p>After stopping the recording, click the "Download Recording" button to save it to your device.</p>
-        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Adam Albustami</p>
+        <p>GitHub: <a href="https://github.com/adamdoesdumbcode">adamdoesdumbcode</a></p>
+        <p>Linktree: <a href="https://linktr.ee/yngstami">linktr.ee/yngstami</a></p>
+    </footer>
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        const recordedVideo = document.getElementById('recordedVideo');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const micPlayback = document.getElementById('micPlayback');
 
-        <h2 class="mt-5">Audio Test</h2>
-        <button id="testMicBtn" class="btn btn-secondary btn-lg">Test Microphone</button>
-        <button id="testSpeakersBtn" class="btn btn-secondary btn-lg">Test Speakers</button>
-        <audio id="audioTest" src="test-tone.mp3" style="display:none;"></audio>
+        document.getElementById('start').onclick = async () => {
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { echoCancellation: true } });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                recordedVideo.src = url;
+                audioPlayback.srcObject = stream; // Playing the audio from the screen
+                recordedChunks = []; // Clear chunks for next recording
+            };
+            mediaRecorder.start();
+        };
 
-        <footer>
-            <p>
-                GitHub: <a href="https://github.com/adamdoesdumbcode" target="_blank">adamdoesdumbcode</a> | 
-                Linktree: <a href="https://linktr.ee/yngstami" target="_blank">yngstami</a>
-            </p>
-            <p class="terms-link">
-                <a href="#termsModal" data-toggle="modal" class="btn btn-link">Terms of Service</a>
-            </p>
-            <p>&copy; 2024 Adam Albustami</p>
-        </footer>
-    </div>
+        document.getElementById('stop').onclick = () => {
+            mediaRecorder.stop();
+        };
 
-    <!-- Terms of Service Modal -->
-    <div class="modal fade" id="termsModal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="termsModalLabel">Terms of Service</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>By using this screen recording service, you acknowledge and agree that:</p>
-                    <ul>
-                        <li>Your recordings will not be stored on our server.</li>
-                        <li>We are not responsible for any data loss or corruption.</li>
-                        <li>All recordings are made locally in your browser.</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+        document.getElementById('download').onclick = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'recording.webm';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        };
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+        document.getElementById('testMic').onclick = async () => {
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(micStream);
+            source.connect(audioContext.destination); // Play through speakers
+            micPlayback.srcObject = micStream; // Allow playback control
+            micPlayback.play();
+            document.getElementById('micTestArea').style.display = 'block'; // Show microphone test area
+        };
+    </script>
 </body>
 </html>
